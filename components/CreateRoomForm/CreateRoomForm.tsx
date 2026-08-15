@@ -1,10 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { personalities } from "@/lib/personalities";
+import { createRoom } from "@/lib/rooms";
 import styles from "./CreateRoomForm.module.scss";
 
 export default function CreateRoomForm() {
+  const router = useRouter();
+
   const [characterName, setCharacterName] = useState("");
   const [username, setUsername] = useState("");
   const [selectedPersonality, setSelectedPersonality] = useState(
@@ -17,17 +21,20 @@ export default function CreateRoomForm() {
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const room = {
-      characterName,
-      username,
-      personality: isCustom
-        ? customPersonality
-        : personalities.find(
-            (personality) => personality.id === selectedPersonality
-          ),
-    };
+    const preset = personalities.find(
+      (personality) => personality.id === selectedPersonality
+    );
 
-    console.log("ROOM:", room);
+    const room = createRoom({
+      characterName: characterName.trim(),
+      username: username.trim().replace(/^@/, ""),
+      personalityId: isCustom ? null : selectedPersonality,
+      personalityInstructions: isCustom
+        ? customPersonality.trim()
+        : preset?.instructions ?? "",
+    });
+
+    router.push(`/room/${room.id}`);
   }
 
   return (
