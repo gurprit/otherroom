@@ -32,15 +32,21 @@ export default function RoomChat({
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isReplying, setIsReplying] = useState(false);
-  const [error, setError] = useState("");
+  const [replyFailed, setReplyFailed] = useState(false);
 
   const messageListRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setRoom(getRoom(roomId));
-    setMessages(getMessages(roomId));
-    setRoomLoaded(true);
-    setMessagesLoaded(true);
+    const timer = window.setTimeout(() => {
+      setRoom(getRoom(roomId));
+      setMessages(getMessages(roomId));
+      setRoomLoaded(true);
+      setMessagesLoaded(true);
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
   }, [roomId]);
 
   useEffect(() => {
@@ -56,51 +62,32 @@ export default function RoomChat({
       top: messageListRef.current.scrollHeight,
       behavior: "smooth",
     });
-  }, [messages, isReplying]);
+  }, [messages, isReplying, replyFailed]);
 
-  async function handleSubmit(
-    event: React.FormEvent<HTMLFormElement>
+  async function requestReply(
+    conversationMessages: ChatMessage[]
   ) {
-    event.preventDefault();
-
     if (!room || isReplying) {
       return;
     }
 
-    const content = message.trim();
-
-    if (!content) {
-      return;
-    }
-
-    setError("");
-    setMessage("");
-
-    const visitorMessage: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: "visitor",
-      content,
-    };
-
-    const updatedMessages = [
-      ...messages,
-      visitorMessage,
-    ];
-
-    setMessages(updatedMessages);
+    setReplyFailed(false);
     setIsReplying(true);
 
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
+
         headers: {
           "Content-Type": "application/json",
         },
+
         body: JSON.stringify({
           characterName: room.characterName,
           personalityInstructions:
             room.personalityInstructions,
-          messages: updatedMessages.map(
+
+          messages: conversationMessages.map(
             ({ role, content }) => ({
               role,
               content,
@@ -130,15 +117,48 @@ export default function RoomChat({
       ]);
     } catch (requestError) {
       console.error(requestError);
-
-      setError(
-        requestError instanceof Error
-          ? requestError.message
-          : "Unable to generate a reply."
-      );
+      setReplyFailed(true);
     } finally {
       setIsReplying(false);
     }
+  }
+
+  async function handleSubmit(
+    event: React.FormEvent<HTMLFormElement>
+  ) {
+    event.preventDefault();
+
+    if (!room || isReplying) {
+      return;
+    }
+
+    const content = message.trim();
+
+    if (!content) {
+      return;
+    }
+
+    setMessage("");
+    setReplyFailed(false);
+
+    const visitorMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: "visitor",
+      content,
+    };
+
+    const updatedMessages = [
+      ...messages,
+      visitorMessage,
+    ];
+
+    setMessages(updatedMessages);
+
+    await requestReply(updatedMessages);
+  }
+
+  function handleRetry() {
+    requestReply(messages);
   }
 
   if (!roomLoaded) {
@@ -238,10 +258,14 @@ export default function RoomChat({
             </div>
           )}
 
-          {error && (
-            <div className={styles.error}>
-              {error}
-            </div>
+          {replyFailed && !isReplying && (
+            <button
+              className={styles.retry}
+              type="button"
+              onClick={handleRetry}
+            >
+              Reply failed · try again
+            </button>
           )}
         </div>
 
