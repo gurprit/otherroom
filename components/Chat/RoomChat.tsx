@@ -18,6 +18,11 @@ type RoomChatProps = {
   roomId: string;
 };
 
+type ChatApiResponse = {
+  message?: string;
+  error?: string;
+};
+
 export default function RoomChat({
   roomId,
 }: RoomChatProps) {
@@ -26,6 +31,8 @@ export default function RoomChat({
   const [messagesLoaded, setMessagesLoaded] = useState(false);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isReplying, setIsReplying] = useState(false);
+  const [error, setError] = useState("");
 
   const messageListRef = useRef<HTMLDivElement>(null);
 
@@ -49,10 +56,16 @@ export default function RoomChat({
       top: messageListRef.current.scrollHeight,
       behavior: "smooth",
     });
-  }, [messages]);
+  }, [messages, isReplying]);
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(
+    event: React.FormEvent<HTMLFormElement>
+  ) {
     event.preventDefault();
+
+    if (!room || isReplying) {
+      return;
+    }
 
     const content = message.trim();
 
@@ -60,18 +73,72 @@ export default function RoomChat({
       return;
     }
 
-    const newMessage: ChatMessage = {
+    setError("");
+    setMessage("");
+
+    const visitorMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: "visitor",
       content,
     };
 
-    setMessages((currentMessages) => [
-      ...currentMessages,
-      newMessage,
-    ]);
+    const updatedMessages = [
+      ...messages,
+      visitorMessage,
+    ];
 
-    setMessage("");
+    setMessages(updatedMessages);
+    setIsReplying(true);
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          characterName: room.characterName,
+          personalityInstructions:
+            room.personalityInstructions,
+          messages: updatedMessages.map(
+            ({ role, content }) => ({
+              role,
+              content,
+            })
+          ),
+        }),
+      });
+
+      const data =
+        (await response.json()) as ChatApiResponse;
+
+      if (!response.ok || !data.message) {
+        throw new Error(
+          data.error ?? "Unable to generate a reply."
+        );
+      }
+
+      const assistantMessage: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        content: data.message,
+      };
+
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        assistantMessage,
+      ]);
+    } catch (requestError) {
+      console.error(requestError);
+
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Unable to generate a reply."
+      );
+    } finally {
+      setIsReplying(false);
+    }
   }
 
   if (!roomLoaded) {
@@ -86,8 +153,12 @@ export default function RoomChat({
     return (
       <main className={styles.notFound}>
         <div>
-          <span className={styles.brand}>OtherRoom</span>
+          <span className={styles.brand}>
+            OtherRoom
+          </span>
+
           <h1>Room not found</h1>
+
           <p>
             This room does not exist in this browser.
           </p>
@@ -102,11 +173,16 @@ export default function RoomChat({
         <header className={styles.header}>
           <div className={styles.identity}>
             <div className={styles.avatar}>
-              {room.characterName.charAt(0).toUpperCase()}
+              {room.characterName
+                .charAt(0)
+                .toUpperCase()}
             </div>
 
             <div>
-              <strong>{room.characterName}</strong>
+              <strong>
+                {room.characterName}
+              </strong>
+
               <span>@{room.username}</span>
             </div>
           </div>
@@ -123,15 +199,20 @@ export default function RoomChat({
           {messages.length === 0 ? (
             <div className={styles.empty}>
               <div className={styles.largeAvatar}>
-                {room.characterName.charAt(0).toUpperCase()}
+                {room.characterName
+                  .charAt(0)
+                  .toUpperCase()}
               </div>
 
-              <strong>{room.characterName}</strong>
+              <strong>
+                {room.characterName}
+              </strong>
+
               <span>@{room.username}</span>
 
               <p>
-                This is an AI character. Send a message
-                to start chatting.
+                This is an AI character. Send a
+                message to start chatting.
               </p>
             </div>
           ) : (
@@ -148,6 +229,20 @@ export default function RoomChat({
               </div>
             ))
           )}
+
+          {isReplying && (
+            <div className={styles.typing}>
+              <span />
+              <span />
+              <span />
+            </div>
+          )}
+
+          {error && (
+            <div className={styles.error}>
+              {error}
+            </div>
+          )}
         </div>
 
         <form
@@ -157,18 +252,25 @@ export default function RoomChat({
           <input
             aria-label="Message"
             type="text"
-            placeholder="Message..."
+            placeholder={
+              isReplying
+                ? `${room.characterName} is typing...`
+                : "Message..."
+            }
             value={message}
             onChange={(event) =>
               setMessage(event.target.value)
             }
             autoComplete="off"
+            disabled={isReplying}
           />
 
           <button
             type="submit"
             aria-label="Send message"
-            disabled={!message.trim()}
+            disabled={
+              !message.trim() || isReplying
+            }
           >
             ↑
           </button>
