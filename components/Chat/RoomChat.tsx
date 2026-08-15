@@ -9,6 +9,9 @@ import {
   getMessages,
   saveMessages,
 } from "@/lib/messages";
+import {
+  recordVisitorMessage,
+} from "@/lib/conversations";
 import type { Room } from "@/types/room";
 import type { ChatMessage } from "@/types/chat";
 import styles from "./RoomChat.module.scss";
@@ -250,6 +253,15 @@ export default function RoomChat({
 
     setMessages(
       updatedMessages
+    );
+
+    recordVisitorMessage(roomId).catch(
+      (trackingError) => {
+        console.error(
+          "Conversation tracking error:",
+          trackingError
+        );
+      }
     );
 
     await requestReply(

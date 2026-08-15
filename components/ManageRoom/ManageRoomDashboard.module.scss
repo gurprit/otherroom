@@ -1,0 +1,271 @@
+.page {
+  min-height: 100dvh;
+  background: #f5f5f5;
+  color: #111;
+}
+
+.container {
+  width: min(
+    100% - 32px,
+    900px
+  );
+  margin: 0 auto;
+  padding: 32px 0 64px;
+}
+
+.header {
+  margin-bottom: 40px;
+}
+
+.brand {
+  display: inline-block;
+  margin-bottom: 56px;
+  color: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.roomIdentity {
+  span {
+    display: block;
+    margin-bottom: 8px;
+    color: #777;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(
+      36px,
+      7vw,
+      64px
+    );
+    line-height: 1;
+  }
+
+  p {
+    margin: 8px 0 0;
+    color: #777;
+    font-size: 16px;
+  }
+}
+
+.summary {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 40px;
+}
+
+.stat {
+  display: flex;
+  min-height: 130px;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px;
+  border: 1px solid #e2e2e2;
+  border-radius: 18px;
+  background: #fff;
+
+  span {
+    color: #777;
+    font-size: 13px;
+  }
+
+  strong {
+    font-size: clamp(
+      28px,
+      5vw,
+      42px
+    );
+    line-height: 1;
+  }
+}
+
+.shareSection,
+.activity {
+  margin-bottom: 24px;
+  padding: 22px;
+  border: 1px solid #e2e2e2;
+  border-radius: 18px;
+  background: #fff;
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 6px;
+  color: #777;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.shareSection {
+  p {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+}
+
+.roomLink {
+  display: flex;
+  gap: 8px;
+  margin-top: 18px;
+
+  code {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #f5f5f5;
+    font-family: inherit;
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  button {
+    flex: 0 0 auto;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 999px;
+    background: #111;
+    color: #fff;
+    cursor: pointer;
+  }
+}
+
+.activityHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+
+  h2 {
+    margin: 0;
+    font-size: 22px;
+  }
+}
+
+.refresh {
+  padding: 8px 14px;
+  border: 1px solid #ddd;
+  border-radius: 999px;
+  background: #fff;
+  color: #555;
+  cursor: pointer;
+
+  &:hover {
+    border-color: #bbb;
+    color: #111;
+  }
+}
+
+.conversationList {
+  display: flex;
+  flex-direction: column;
+}
+
+.conversation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 0;
+  border-top: 1px solid #ededed;
+
+  > div:first-child {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  strong {
+    font-size: 14px;
+  }
+
+  span {
+    color: #777;
+    font-size: 12px;
+  }
+}
+
+.conversationStats {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 14px;
+
+  span {
+    padding: 6px 9px;
+    border-radius: 999px;
+    background: #f3f3f3;
+    color: #555;
+    font-weight: 600;
+  }
+}
+
+.empty {
+  padding: 40px 20px;
+  border-top: 1px solid #ededed;
+  text-align: center;
+
+  strong {
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  p {
+    margin: 0;
+    color: #777;
+    font-size: 13px;
+  }
+}
+
+.footer {
+  color: #999;
+  font-size: 11px;
+  text-align: center;
+}
+
+.statePage {
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  padding: 32px;
+  text-align: center;
+
+  .brand {
+    margin-bottom: 40px;
+  }
+
+  h1 {
+    margin: 0 0 8px;
+  }
+
+  p {
+    max-width: 340px;
+    margin: 0;
+    color: #777;
+  }
+}
+
+@media (min-width: 700px) {
+  .container {
+    padding-top: 56px;
+  }
+
+  .summary {
+    grid-template-columns:
+      repeat(4, minmax(0, 1fr));
+  }
+}

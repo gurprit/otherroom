@@ -92,15 +92,29 @@ export default function CreateRoomForm() {
         );
       }
 
-      if (data.managementToken) {
-        localStorage.setItem(
-          `otherroom_management_${data.room.id}`,
-          data.managementToken
+      if (!data.managementToken) {
+        throw new Error(
+          "Room was created without a management token."
         );
       }
 
+      const managementUrl =
+        `/manage/${data.room.id}?token=${encodeURIComponent(
+          data.managementToken
+        )}`;
+
+      localStorage.setItem(
+        `otherroom_management_${data.room.id}`,
+        data.managementToken
+      );
+
+      localStorage.setItem(
+        "otherroom_latest_management_url",
+        managementUrl
+      );
+
       router.push(
-        `/room/${data.room.id}`
+        managementUrl
       );
     } catch (requestError) {
       console.error(requestError);
