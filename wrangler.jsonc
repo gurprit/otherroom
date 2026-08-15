@@ -1,15 +1,21 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "otherroom",
+  "main": ".open-next/worker.js",
   "compatibility_date": "2026-08-15",
   "compatibility_flags": [
     "nodejs_compat"
   ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
   "d1_databases": [
     {
-      "binding": "otherroom",
+      "binding": "DB",
       "database_name": "otherroom",
-      "database_id": "d0013932-d793-4b9f-9a4d-5376681a1d34"
+      "database_id": "d0013932-d793-4b9f-9a4d-5376681a1d34",
+      "remote": true
     }
   ]
 }

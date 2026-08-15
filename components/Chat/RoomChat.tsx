@@ -5,7 +5,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { getRoom } from "@/lib/rooms";
 import {
   getMessages,
   saveMessages,
@@ -18,6 +17,11 @@ type RoomChatProps = {
   roomId: string;
 };
 
+type RoomApiResponse = {
+  room?: Room;
+  error?: string;
+};
+
 type ChatApiResponse = {
   message?: string;
   error?: string;
@@ -26,26 +30,88 @@ type ChatApiResponse = {
 export default function RoomChat({
   roomId,
 }: RoomChatProps) {
-  const [room, setRoom] = useState<Room | null>(null);
-  const [roomLoaded, setRoomLoaded] = useState(false);
-  const [messagesLoaded, setMessagesLoaded] = useState(false);
-  const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [isReplying, setIsReplying] = useState(false);
-  const [replyFailed, setReplyFailed] = useState(false);
+  const [room, setRoom] =
+    useState<Room | null>(null);
 
-  const messageListRef = useRef<HTMLDivElement>(null);
+  const [roomLoaded, setRoomLoaded] =
+    useState(false);
+
+  const [messagesLoaded, setMessagesLoaded] =
+    useState(false);
+
+  const [message, setMessage] =
+    useState("");
+
+  const [messages, setMessages] =
+    useState<ChatMessage[]>([]);
+
+  const [isReplying, setIsReplying] =
+    useState(false);
+
+  const [replyFailed, setReplyFailed] =
+    useState(false);
+
+  const [roomError, setRoomError] =
+    useState("");
+
+  const messageListRef =
+    useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setRoom(getRoom(roomId));
-      setMessages(getMessages(roomId));
-      setRoomLoaded(true);
-      setMessagesLoaded(true);
-    }, 0);
+    let cancelled = false;
+
+    async function loadRoom() {
+      try {
+        const response = await fetch(
+          `/api/rooms/${roomId}`,
+          {
+            cache: "no-store",
+          }
+        );
+
+        const data =
+          (await response.json()) as RoomApiResponse;
+
+        if (
+          !response.ok ||
+          !data.room
+        ) {
+          throw new Error(
+            data.error ??
+              "Room not found."
+          );
+        }
+
+        if (cancelled) {
+          return;
+        }
+
+        setRoom(data.room);
+        setMessages(
+          getMessages(roomId)
+        );
+        setMessagesLoaded(true);
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
+
+        setRoomError(
+          error instanceof Error
+            ? error.message
+            : "Unable to load room."
+        );
+      } finally {
+        if (!cancelled) {
+          setRoomLoaded(true);
+        }
+      }
+    }
+
+    loadRoom();
 
     return () => {
-      window.clearTimeout(timer);
+      cancelled = true;
     };
   }, [roomId]);
 
@@ -54,15 +120,28 @@ export default function RoomChat({
       return;
     }
 
-    saveMessages(roomId, messages);
-  }, [messages, messagesLoaded, roomId]);
+    saveMessages(
+      roomId,
+      messages
+    );
+  }, [
+    messages,
+    messagesLoaded,
+    roomId,
+  ]);
 
   useEffect(() => {
     messageListRef.current?.scrollTo({
-      top: messageListRef.current.scrollHeight,
+      top:
+        messageListRef.current.scrollHeight,
+
       behavior: "smooth",
     });
-  }, [messages, isReplying, replyFailed]);
+  }, [
+    messages,
+    isReplying,
+    replyFailed,
+  ]);
 
   async function requestReply(
     conversationMessages: ChatMessage[]
@@ -75,33 +154,44 @@ export default function RoomChat({
     setIsReplying(true);
 
     try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
+      const response = await fetch(
+        "/api/chat",
+        {
+          method: "POST",
 
-        headers: {
-          "Content-Type": "application/json",
-        },
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
 
-        body: JSON.stringify({
-          characterName: room.characterName,
-          personalityInstructions:
-            room.personalityInstructions,
+          body: JSON.stringify({
+            characterName:
+              room.characterName,
 
-          messages: conversationMessages.map(
-            ({ role, content }) => ({
-              role,
-              content,
-            })
-          ),
-        }),
-      });
+            personalityInstructions:
+              room.personalityInstructions,
+
+            messages:
+              conversationMessages.map(
+                ({ role, content }) => ({
+                  role,
+                  content,
+                })
+              ),
+          }),
+        }
+      );
 
       const data =
         (await response.json()) as ChatApiResponse;
 
-      if (!response.ok || !data.message) {
+      if (
+        !response.ok ||
+        !data.message
+      ) {
         throw new Error(
-          data.error ?? "Unable to generate a reply."
+          data.error ??
+            "Unable to generate a reply."
         );
       }
 
@@ -111,12 +201,17 @@ export default function RoomChat({
         content: data.message,
       };
 
-      setMessages((currentMessages) => [
-        ...currentMessages,
-        assistantMessage,
-      ]);
+      setMessages(
+        (currentMessages) => [
+          ...currentMessages,
+          assistantMessage,
+        ]
+      );
     } catch (requestError) {
-      console.error(requestError);
+      console.error(
+        requestError
+      );
+
       setReplyFailed(true);
     } finally {
       setIsReplying(false);
@@ -132,7 +227,8 @@ export default function RoomChat({
       return;
     }
 
-    const content = message.trim();
+    const content =
+      message.trim();
 
     if (!content) {
       return;
@@ -152,9 +248,13 @@ export default function RoomChat({
       visitorMessage,
     ];
 
-    setMessages(updatedMessages);
+    setMessages(
+      updatedMessages
+    );
 
-    await requestReply(updatedMessages);
+    await requestReply(
+      updatedMessages
+    );
   }
 
   function handleRetry() {
@@ -177,10 +277,13 @@ export default function RoomChat({
             OtherRoom
           </span>
 
-          <h1>Room not found</h1>
+          <h1>
+            Room not found
+          </h1>
 
           <p>
-            This room does not exist in this browser.
+            {roomError ||
+              "This room does not exist."}
           </p>
         </div>
       </main>
@@ -203,7 +306,9 @@ export default function RoomChat({
                 {room.characterName}
               </strong>
 
-              <span>@{room.username}</span>
+              <span>
+                @{room.username}
+              </span>
             </div>
           </div>
 
@@ -218,7 +323,9 @@ export default function RoomChat({
         >
           {messages.length === 0 ? (
             <div className={styles.empty}>
-              <div className={styles.largeAvatar}>
+              <div
+                className={styles.largeAvatar}
+              >
                 {room.characterName
                   .charAt(0)
                   .toUpperCase()}
@@ -228,26 +335,31 @@ export default function RoomChat({
                 {room.characterName}
               </strong>
 
-              <span>@{room.username}</span>
+              <span>
+                @{room.username}
+              </span>
 
               <p>
-                This is an AI character. Send a
-                message to start chatting.
+                This is an AI character.
+                Send a message to start chatting.
               </p>
             </div>
           ) : (
-            messages.map((chatMessage) => (
-              <div
-                className={
-                  chatMessage.role === "visitor"
-                    ? styles.visitorMessage
-                    : styles.assistantMessage
-                }
-                key={chatMessage.id}
-              >
-                {chatMessage.content}
-              </div>
-            ))
+            messages.map(
+              (chatMessage) => (
+                <div
+                  className={
+                    chatMessage.role ===
+                    "visitor"
+                      ? styles.visitorMessage
+                      : styles.assistantMessage
+                  }
+                  key={chatMessage.id}
+                >
+                  {chatMessage.content}
+                </div>
+              )
+            )
           )}
 
           {isReplying && (
@@ -258,15 +370,16 @@ export default function RoomChat({
             </div>
           )}
 
-          {replyFailed && !isReplying && (
-            <button
-              className={styles.retry}
-              type="button"
-              onClick={handleRetry}
-            >
-              Reply failed · try again
-            </button>
-          )}
+          {replyFailed &&
+            !isReplying && (
+              <button
+                className={styles.retry}
+                type="button"
+                onClick={handleRetry}
+              >
+                Reply failed · try again
+              </button>
+            )}
         </div>
 
         <form
@@ -293,7 +406,8 @@ export default function RoomChat({
             type="submit"
             aria-label="Send message"
             disabled={
-              !message.trim() || isReplying
+              !message.trim() ||
+              isReplying
             }
           >
             ↑

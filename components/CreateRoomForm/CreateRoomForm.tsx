@@ -3,8 +3,17 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { personalities } from "@/lib/personalities";
-import { createRoom } from "@/lib/rooms";
 import styles from "./CreateRoomForm.module.scss";
+
+type CreateRoomApiResponse = {
+  room?: {
+    id: string;
+  };
+
+  managementToken?: string;
+
+  error?: string;
+};
 
 export default function CreateRoomForm() {
   const router = useRouter();
@@ -15,44 +24,120 @@ export default function CreateRoomForm() {
     personalities[0].id
   );
   const [customPersonality, setCustomPersonality] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
+  const [error, setError] = useState("");
 
-  const isCustom = selectedPersonality === "custom";
+  const isCustom =
+    selectedPersonality === "custom";
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(
+    event: React.FormEvent<HTMLFormElement>
+  ) {
     event.preventDefault();
 
-    const preset = personalities.find(
-      (personality) => personality.id === selectedPersonality
-    );
+    if (isCreating) {
+      return;
+    }
 
-    const room = createRoom({
-      characterName: characterName.trim(),
-      username: username.trim().replace(/^@/, ""),
-      personalityId: isCustom ? null : selectedPersonality,
-      personalityInstructions: isCustom
-        ? customPersonality.trim()
-        : preset?.instructions ?? "",
-    });
+    setError("");
+    setIsCreating(true);
 
-    router.push(`/room/${room.id}`);
+    try {
+      const preset = personalities.find(
+        (personality) =>
+          personality.id === selectedPersonality
+      );
+
+      const response = await fetch(
+        "/api/rooms",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify({
+            characterName:
+              characterName.trim(),
+
+            username:
+              username
+                .trim()
+                .replace(/^@/, ""),
+
+            personalityId:
+              isCustom
+                ? null
+                : selectedPersonality,
+
+            personalityInstructions:
+              isCustom
+                ? customPersonality.trim()
+                : preset?.instructions ?? "",
+          }),
+        }
+      );
+
+      const data =
+        (await response.json()) as CreateRoomApiResponse;
+
+      if (
+        !response.ok ||
+        !data.room?.id
+      ) {
+        throw new Error(
+          data.error ??
+            "Unable to create room."
+        );
+      }
+
+      if (data.managementToken) {
+        localStorage.setItem(
+          `otherroom_management_${data.room.id}`,
+          data.managementToken
+        );
+      }
+
+      router.push(
+        `/room/${data.room.id}`
+      );
+    } catch (requestError) {
+      console.error(requestError);
+
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Unable to create room."
+      );
+    } finally {
+      setIsCreating(false);
+    }
   }
 
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <span className={styles.logo}>OtherRoom</span>
+        <span className={styles.logo}>
+          OtherRoom
+        </span>
 
         <h1>Create a room</h1>
 
         <p>
-          Create an AI character and give someone somewhere else to continue
-          the conversation.
+          Create an AI character and give someone
+          somewhere else to continue the conversation.
         </p>
       </header>
 
-      <form className={styles.form} onSubmit={handleSubmit}>
+      <form
+        className={styles.form}
+        onSubmit={handleSubmit}
+      >
         <div className={styles.field}>
-          <label htmlFor="characterName">Character name</label>
+          <label htmlFor="characterName">
+            Character name
+          </label>
 
           <input
             id="characterName"
@@ -60,13 +145,17 @@ export default function CreateRoomForm() {
             type="text"
             placeholder="Barbara"
             value={characterName}
-            onChange={(event) => setCharacterName(event.target.value)}
+            onChange={(event) =>
+              setCharacterName(event.target.value)
+            }
             required
           />
         </div>
 
         <div className={styles.field}>
-          <label htmlFor="username">Username</label>
+          <label htmlFor="username">
+            Username
+          </label>
 
           <div className={styles.usernameField}>
             <span>@</span>
@@ -77,14 +166,18 @@ export default function CreateRoomForm() {
               type="text"
               placeholder="barbara"
               value={username}
-              onChange={(event) => setUsername(event.target.value)}
+              onChange={(event) =>
+                setUsername(event.target.value)
+              }
               required
             />
           </div>
         </div>
 
         <fieldset className={styles.personalities}>
-          <legend>Personality</legend>
+          <legend>
+            Personality
+          </legend>
 
           <div className={styles.personalityList}>
             {personalities.map((personality) => (
@@ -96,15 +189,25 @@ export default function CreateRoomForm() {
                   type="radio"
                   name="personality"
                   value={personality.id}
-                  checked={selectedPersonality === personality.id}
+                  checked={
+                    selectedPersonality ===
+                    personality.id
+                  }
                   onChange={(event) =>
-                    setSelectedPersonality(event.target.value)
+                    setSelectedPersonality(
+                      event.target.value
+                    )
                   }
                 />
 
                 <span>
-                  <strong>{personality.name}</strong>
-                  <small>{personality.description}</small>
+                  <strong>
+                    {personality.name}
+                  </strong>
+
+                  <small>
+                    {personality.description}
+                  </small>
                 </span>
               </label>
             ))}
@@ -114,16 +217,24 @@ export default function CreateRoomForm() {
                 type="radio"
                 name="personality"
                 value="custom"
-                checked={selectedPersonality === "custom"}
+                checked={
+                  selectedPersonality === "custom"
+                }
                 onChange={(event) =>
-                  setSelectedPersonality(event.target.value)
+                  setSelectedPersonality(
+                    event.target.value
+                  )
                 }
               />
 
               <span>
-                <strong>Custom</strong>
+                <strong>
+                  Custom
+                </strong>
+
                 <small>
-                  Describe exactly how you want your character to behave.
+                  Describe exactly how you want your
+                  character to behave.
                 </small>
               </span>
             </label>
@@ -142,15 +253,29 @@ export default function CreateRoomForm() {
               placeholder="Friendly and slightly awkward. Somehow turns every conversation into a story about conspiracy theories involving pigeons..."
               value={customPersonality}
               onChange={(event) =>
-                setCustomPersonality(event.target.value)
+                setCustomPersonality(
+                  event.target.value
+                )
               }
               required
             />
           </div>
         )}
 
-        <button className={styles.submit} type="submit">
-          Create Room
+        {error && (
+          <p role="alert">
+            {error}
+          </p>
+        )}
+
+        <button
+          className={styles.submit}
+          type="submit"
+          disabled={isCreating}
+        >
+          {isCreating
+            ? "Creating Room..."
+            : "Create Room"}
         </button>
       </form>
     </div>
