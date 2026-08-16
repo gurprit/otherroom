@@ -626,7 +626,7 @@ export default function CreateRoomForm() {
                     }
                   />
 
-                  <span>
+                  <span className={styles.personalityContent}>
                     <strong>
                       {
                         personality.name
@@ -638,6 +638,10 @@ export default function CreateRoomForm() {
                         personality.description
                       }
                     </small>
+
+                    <span className={styles.personalityExample}>
+                      “{personality.example}”
+                    </span>
                   </span>
                 </label>
               )
@@ -665,7 +669,7 @@ export default function CreateRoomForm() {
                 }
               />
 
-              <span>
+              <span className={styles.personalityContent}>
                 <strong>
                   Custom
                 </strong>
@@ -675,6 +679,10 @@ export default function CreateRoomForm() {
                   how you want your
                   character to behave.
                 </small>
+
+                <span className={styles.personalityExample}>
+                  “You decide how strange this gets.”
+                </span>
               </span>
             </label>
           </div>
