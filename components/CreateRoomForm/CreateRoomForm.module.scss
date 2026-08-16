@@ -152,3 +152,194 @@
     background: #333;
   }
 }
+
+.readyBadge {
+  display: inline-flex;
+  width: fit-content;
+  margin-bottom: 14px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #ededed;
+  color: #555;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.readySections {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.linkCard {
+  padding: 22px;
+  border: 1px solid #dedede;
+  border-radius: 18px;
+  background: #fff;
+
+  > p {
+    margin: 10px 0 18px;
+    color: #666;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+}
+
+.privateCard {
+  background: #fafafa;
+}
+
+.linkCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  > div {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 18px;
+  }
+}
+
+.step {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #111;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  place-items: center;
+}
+
+.publicBadge,
+.privateBadge {
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #eee;
+  color: #666;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.privateBadge {
+  background: #111;
+  color: #fff;
+}
+
+.urlRow {
+  display: flex;
+  gap: 8px;
+
+  button {
+    flex: 0 0 auto;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 999px;
+    background: #111;
+    color: #fff;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover {
+      background: #333;
+    }
+  }
+}
+
+.url {
+  min-width: 0;
+  flex: 1;
+  padding: 13px 14px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #f3f3f3;
+  font-size: 13px;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.secretUrl {
+  color: #555;
+}
+
+.saveNotice {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #ededed;
+  color: #555;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.dashboardButton {
+  display: flex;
+  min-height: 54px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+  border-radius: 999px;
+  background: #111;
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+
+  &:hover {
+    background: #333;
+  }
+}
+
+.secondaryButton {
+  min-height: 48px;
+  border: 1px solid #d8d8d8;
+  border-radius: 999px;
+  background: #fff;
+  color: #555;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    border-color: #aaa;
+    color: #111;
+  }
+}
+
+.error {
+  margin: 0;
+  color: #b42318;
+  font-size: 14px;
+}
+
+@media (max-width: 520px) {
+  .linkCardHeader {
+    align-items: flex-start;
+  }
+
+  .urlRow {
+    flex-direction: column;
+
+    button {
+      min-height: 44px;
+    }
+  }
+
+  .url {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
