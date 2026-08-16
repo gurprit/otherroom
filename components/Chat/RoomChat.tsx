@@ -10,6 +10,7 @@ import {
   saveMessages,
 } from "@/lib/messages";
 import {
+  recordDecoyReply,
   recordVisitorMessage,
 } from "@/lib/conversations";
 import type { Room } from "@/types/room";
@@ -49,9 +50,6 @@ export default function RoomChat({
     useState<ChatMessage[]>([]);
 
   const [isReplying, setIsReplying] =
-    useState(false);
-
-  const [replyFailed, setReplyFailed] =
     useState(false);
 
   const [roomError, setRoomError] =
@@ -143,7 +141,6 @@ export default function RoomChat({
   }, [
     messages,
     isReplying,
-    replyFailed,
   ]);
 
   async function requestReply(
@@ -153,69 +150,114 @@ export default function RoomChat({
       return;
     }
 
-    setReplyFailed(false);
+    const maxAttempts = 3;
+
     setIsReplying(true);
 
     try {
-      const response = await fetch(
-        "/api/chat",
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-
-          body: JSON.stringify({
-            characterName:
-              room.characterName,
-
-            personalityInstructions:
-              room.personalityInstructions,
-
-            messages:
-              conversationMessages.map(
-                ({ role, content }) => ({
-                  role,
-                  content,
-                })
-              ),
-          }),
-        }
-      );
-
-      const data =
-        (await response.json()) as ChatApiResponse;
-
-      if (
-        !response.ok ||
-        !data.message
+      for (
+        let attempt = 1;
+        attempt <= maxAttempts;
+        attempt += 1
       ) {
-        throw new Error(
-          data.error ??
-            "Unable to generate a reply."
-        );
+        try {
+          const response = await fetch(
+            "/api/chat",
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+
+              body: JSON.stringify({
+                characterName:
+                  room.characterName,
+
+                personalityInstructions:
+                  room.personalityInstructions,
+
+                messages:
+                  conversationMessages.map(
+                    ({ role, content }) => ({
+                      role,
+                      content,
+                    })
+                  ),
+              }),
+            }
+          );
+
+          const data =
+            (await response.json()) as ChatApiResponse;
+
+          if (
+            !response.ok ||
+            !data.message
+          ) {
+            throw new Error(
+              data.error ??
+                "Unable to generate a reply."
+            );
+          }
+
+          const assistantMessage: ChatMessage = {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content: data.message,
+          };
+
+          setMessages(
+            (currentMessages) => [
+              ...currentMessages,
+              assistantMessage,
+            ]
+          );
+
+          recordDecoyReply(
+            roomId,
+            data.message
+          ).catch(
+            (trackingError) => {
+              console.error(
+                "Decoy reply tracking error:",
+                trackingError
+              );
+            }
+          );
+
+          return;
+        } catch (requestError) {
+          console.warn(
+            `Chat attempt ${attempt} of ${maxAttempts} failed:`,
+            requestError
+          );
+
+          if (
+            attempt ===
+            maxAttempts
+          ) {
+            throw requestError;
+          }
+
+          await new Promise(
+            (resolve) =>
+              window.setTimeout(
+                resolve,
+                attempt === 1
+                  ? 800
+                  : 1500
+              )
+          );
+        }
       }
-
-      const assistantMessage: ChatMessage = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: data.message,
-      };
-
-      setMessages(
-        (currentMessages) => [
-          ...currentMessages,
-          assistantMessage,
-        ]
-      );
     } catch (requestError) {
       console.error(
+        "All automatic chat attempts failed:",
         requestError
       );
 
-      setReplyFailed(true);
     } finally {
       setIsReplying(false);
     }
@@ -238,7 +280,6 @@ export default function RoomChat({
     }
 
     setMessage("");
-    setReplyFailed(false);
 
     const visitorMessage: ChatMessage = {
       id: crypto.randomUUID(),
@@ -267,10 +308,6 @@ export default function RoomChat({
     await requestReply(
       updatedMessages
     );
-  }
-
-  function handleRetry() {
-    requestReply(messages);
   }
 
   if (!roomLoaded) {
@@ -382,16 +419,6 @@ export default function RoomChat({
             </div>
           )}
 
-          {replyFailed &&
-            !isReplying && (
-              <button
-                className={styles.retry}
-                type="button"
-                onClick={handleRetry}
-              >
-                Reply failed · try again
-              </button>
-            )}
         </div>
 
         <form

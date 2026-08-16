@@ -6,6 +6,9 @@ import {
   useState,
 } from "react";
 import Link from "next/link";
+import {
+  getChaosLabel,
+} from "@/lib/chaos";
 import styles from "./ManageRoomDashboard.module.scss";
 
 type ConversationStats = {
@@ -14,6 +17,8 @@ type ConversationStats = {
   lastActivityAt: string;
   visitorMessageCount: number;
   durationSeconds: number;
+  chaosLevel: number;
+  lastDecoyMessage: string | null;
 };
 
 type ManageRoomResponse = {
@@ -28,6 +33,7 @@ type ManageRoomResponse = {
     totalMessages: number;
     longestConversationSeconds: number;
     averageConversationSeconds: number;
+    highestChaosLevel: number;
   };
 
   conversations?: ConversationStats[];
@@ -203,6 +209,15 @@ export default function ManageRoomDashboard({
   const conversations =
     data.conversations ?? [];
 
+  const rankedConversations =
+    [...conversations].sort(
+      (a, b) =>
+        b.durationSeconds -
+        a.durationSeconds ||
+        b.visitorMessageCount -
+        a.visitorMessageCount
+    );
+
   return (
     <main className={styles.page}>
       <div className={styles.container}>
@@ -264,7 +279,7 @@ export default function ManageRoomDashboard({
 
           <article className={styles.stat}>
             <span>
-              Average survival time
+              Average diversion time
             </span>
 
             <strong>
@@ -309,11 +324,11 @@ export default function ManageRoomDashboard({
           <div className={styles.activityHeader}>
             <div>
               <span className={styles.eyebrow}>
-                Recent visitors
+                Leaderboard
               </span>
 
               <h2>
-                Conversation activity
+                Who survived the longest?
               </h2>
             </div>
 
@@ -329,7 +344,7 @@ export default function ManageRoomDashboard({
             </button>
           </div>
 
-          {conversations.length === 0 ? (
+          {rankedConversations.length === 0 ? (
             <div className={styles.empty}>
               <strong>
                 Nobody yet
@@ -342,58 +357,128 @@ export default function ManageRoomDashboard({
             </div>
           ) : (
             <div className={styles.conversationList}>
-              {conversations.map(
+              {rankedConversations.map(
                 (
                   conversation,
                   index
-                ) => (
-                  <article
-                    className={styles.conversation}
-                    key={conversation.id}
-                  >
-                    <div>
-                      <strong>
-                        Visitor{" "}
-                        {conversations.length -
-                          index}
-                      </strong>
+                ) => {
+                  const rank =
+                    index + 1;
 
-                      <span>
-                        {formatStartedAt(
-                          conversation.startedAt
-                        )}
-                      </span>
-                    </div>
+                  const medal =
+                    rank === 1
+                      ? "🥇"
+                      : rank === 2
+                        ? "🥈"
+                        : rank === 3
+                          ? "🥉"
+                          : `#${rank}`;
 
-                    <div
-                      className={styles.conversationStats}
+                  return (
+                    <article
+                      className={styles.conversation}
+                      key={conversation.id}
                     >
-                      <span>
-                        {
-                          conversation.visitorMessageCount
-                        }{" "}
-                        {conversation.visitorMessageCount ===
-                        1
-                          ? "message"
-                          : "messages"}
-                      </span>
+                      <div className={styles.visitorIdentity}>
+                        <span className={styles.rank}>
+                          {medal}
+                        </span>
 
-                      <span>
-                        {formatDuration(
-                          conversation.durationSeconds
+                        <div className={styles.visitorMeta}>
+                          <strong>
+                            Visitor #{rank}
+                          </strong>
+
+                          <span>
+                            {formatStartedAt(
+                              conversation.startedAt
+                            )}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div
+                        className={styles.conversationStats}
+                      >
+                        <span>
+                          {formatDuration(
+                            conversation.durationSeconds
+                          )}
+                        </span>
+
+                        <span>
+                          {
+                            conversation.visitorMessageCount
+                          }{" "}
+                          {conversation.visitorMessageCount ===
+                          1
+                            ? "message"
+                            : "messages"}
+                        </span>
+                      </div>
+
+                      <div className={styles.chaosResult}>
+                        <div className={styles.chaosTop}>
+                          <span className={styles.chaosLabel}>
+                            Unhinged level
+                          </span>
+
+                          <strong>
+                            Level {conversation.chaosLevel} ·{" "}
+                            {getChaosLabel(
+                              Math.min(
+                                5,
+                                Math.max(
+                                  1,
+                                  conversation.chaosLevel
+                                )
+                              ) as 1 | 2 | 3 | 4 | 5
+                            )}
+                          </strong>
+                        </div>
+
+                        <div
+                          className={styles.chaosMeter}
+                          aria-label={`Unhinged level ${conversation.chaosLevel} out of 5`}
+                        >
+                          {[1, 2, 3, 4, 5].map(
+                            (level) => (
+                              <span
+                                key={level}
+                                className={
+                                  level <=
+                                  conversation.chaosLevel
+                                    ? styles.chaosActive
+                                    : undefined
+                                }
+                              />
+                            )
+                          )}
+                        </div>
+
+                        {conversation.lastDecoyMessage && (
+                          <div className={styles.lastMessage}>
+                            <span>
+                              Last thing {room.characterName} said
+                            </span>
+
+                            <blockquote>
+                              “{conversation.lastDecoyMessage}”
+                            </blockquote>
+                          </div>
                         )}
-                      </span>
-                    </div>
-                  </article>
-                )
+                      </div>
+                    </article>
+                  );
+                }
               )}
             </div>
           )}
         </section>
 
         <footer className={styles.footer}>
-          Conversation text is not stored
-          in OtherRoom statistics.
+          Full conversation text is not stored.
+          Only the latest decoy reply is retained for results.
         </footer>
       </div>
     </main>

@@ -184,20 +184,6 @@
   padding: 16px 0;
   border-top: 1px solid #ededed;
 
-  > div:first-child {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  strong {
-    font-size: 14px;
-  }
-
-  span {
-    color: #777;
-    font-size: 12px;
-  }
 }
 
 .conversationStats {
@@ -267,5 +253,171 @@
   .summary {
     grid-template-columns:
       repeat(4, minmax(0, 1fr));
+  }
+}
+
+.visitorIdentity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.rank {
+  display: block;
+  width: auto;
+  height: auto;
+  flex: 0 0 auto;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.visitorMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  strong {
+    display: block;
+    font-size: 16px;
+  }
+
+  span {
+    display: block;
+    color: #777;
+    font-size: 14px;
+    font-weight: 500;
+  }
+}
+
+.conversation {
+  flex-wrap: wrap;
+}
+
+.chaosResult {
+  width: 100%;
+  margin-top: 4px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: #f7f7f7;
+}
+
+.chaosHeading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+
+  span {
+    color: #777;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  strong {
+    font-size: 14px;
+  }
+}
+
+.chaosMeter {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+
+  > span {
+    height: 5px;
+    border-radius: 999px;
+    background: #ddd;
+  }
+
+  > .chaosActive {
+    background: #111;
+  }
+}
+
+.lastMessage {
+  margin-top: 16px;
+
+  > span {
+    display: block;
+    margin-bottom: 5px;
+    color: #888;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  blockquote {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.45;
+  }
+}
+
+.conversation {
+  flex-wrap: wrap;
+}
+
+.chaosResult {
+  width: 100%;
+  margin-top: 10px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: #f7f7f7;
+}
+
+.chaosTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+
+  strong {
+    font-size: 14px;
+  }
+}
+
+.chaosLabel {
+  color: #777;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.chaosMeter {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 5px;
+
+  > span {
+    height: 6px;
+    border-radius: 999px;
+    background: #ddd;
+  }
+
+  > .chaosActive {
+    background: #111;
+  }
+}
+
+.lastMessage {
+  margin-top: 16px;
+
+  > span {
+    display: block;
+    margin-bottom: 6px;
+    color: #888;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  blockquote {
+    margin: 0;
+    font-size: 15px;
+    font-style: normal;
+    line-height: 1.45;
   }
 }

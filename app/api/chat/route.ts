@@ -1,9 +1,19 @@
 import { buildSystemPrompt } from "@/lib/prompts";
 
-const MODEL = "@cf/google/gemma-4-26b-a4b-it";
-
-const MAX_ATTEMPTS = 2;
-const REQUEST_TIMEOUT_MS = 25000;
+const MODELS = [
+  {
+    id: "@cf/google/gemma-4-26b-a4b-it",
+    name: "Gemma",
+    timeoutMs: 12000,
+    maxCompletionTokens: 1000,
+  },
+  {
+    id: "@cf/zai-org/glm-4.7-flash",
+    name: "GLM",
+    timeoutMs: 10000,
+    maxCompletionTokens: 700,
+  },
+] as const;
 
 type IncomingMessage = {
   role: "visitor" | "assistant";
@@ -40,7 +50,9 @@ type CloudflareResponse = {
   }>;
 };
 
-function looksLikePromptLeak(content: string) {
+function looksLikePromptLeak(
+  content: string
+) {
   const suspiciousPatterns = [
     /we need to respond/i,
     /we need to answer/i,
@@ -55,40 +67,54 @@ function looksLikePromptLeak(content: string) {
     /we should say/i,
     /could say/i,
     /maybe say/i,
+    /chaos level/i,
   ];
 
-  return suspiciousPatterns.some((pattern) =>
-    pattern.test(content)
+  return suspiciousPatterns.some(
+    (pattern) =>
+      pattern.test(content)
   );
 }
 
 async function requestCompletion({
   accountId,
   apiToken,
+  model,
+  timeoutMs,
+  maxCompletionTokens,
   messages,
 }: {
   accountId: string;
   apiToken: string;
+  model: string;
+  timeoutMs: number;
+  maxCompletionTokens: number;
+
   messages: Array<{
     role: string;
     content: string;
   }>;
 }) {
-  const controller = new AbortController();
+  const controller =
+    new AbortController();
 
-  const timeout = setTimeout(() => {
-    controller.abort();
-  }, REQUEST_TIMEOUT_MS);
+  const timeout =
+    setTimeout(() => {
+      controller.abort();
+    }, timeoutMs);
 
   try {
     const response = await fetch(
-      `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${MODEL}`,
+      `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`,
       {
         method: "POST",
 
         headers: {
-          Authorization: `Bearer ${apiToken}`,
-          "Content-Type": "application/json",
+          Authorization:
+            `Bearer ${apiToken}`,
+
+          "Content-Type":
+            "application/json",
         },
 
         body: JSON.stringify({
@@ -96,7 +122,8 @@ async function requestCompletion({
 
           reasoning_effort: "low",
 
-          max_completion_tokens: 800,
+          max_completion_tokens:
+            maxCompletionTokens,
 
           temperature: 0.9,
         }),
@@ -117,15 +144,22 @@ async function requestCompletion({
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(
+  request: Request
+) {
   try {
     const accountId =
-      process.env.CLOUDFLARE_ACCOUNT_ID;
+      process.env
+        .CLOUDFLARE_ACCOUNT_ID;
 
     const apiToken =
-      process.env.CLOUDFLARE_AI_TOKEN;
+      process.env
+        .CLOUDFLARE_AI_TOKEN;
 
-    if (!accountId || !apiToken) {
+    if (
+      !accountId ||
+      !apiToken
+    ) {
       return Response.json(
         {
           error:
@@ -137,7 +171,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const body = (await request.json()) as ChatRequest;
+    const body =
+      (await request.json()) as ChatRequest;
 
     const {
       characterName,
@@ -153,7 +188,8 @@ export async function POST(request: Request) {
     ) {
       return Response.json(
         {
-          error: "Invalid chat request.",
+          error:
+            "Invalid chat request.",
         },
         {
           status: 400,
@@ -161,17 +197,30 @@ export async function POST(request: Request) {
       );
     }
 
-    const visitorMessageCount = messages.filter(
-      (message) => message.role === "visitor"
-    ).length;
+    const visitorMessageCount =
+      messages.filter(
+        (message) =>
+          message.role ===
+          "visitor"
+      ).length;
 
-    const systemPrompt = buildSystemPrompt({
-      characterName,
-      personalityInstructions,
-      visitorMessageCount,
-    });
+    const systemPrompt =
+      buildSystemPrompt({
+        characterName,
+        personalityInstructions,
+        visitorMessageCount,
+      });
 
-    const recentMessages = messages.slice(-12);
+    /*
+     * We only need enough recent context
+     * for a natural DM conversation.
+     *
+     * Keeping this bounded also prevents
+     * extremely long chats from bloating
+     * every AI request.
+     */
+    const recentMessages =
+      messages.slice(-10);
 
     const cloudflareMessages = [
       {
@@ -179,148 +228,169 @@ export async function POST(request: Request) {
         content: systemPrompt,
       },
 
-      ...recentMessages.map((message) => ({
-        role:
-          message.role === "visitor"
-            ? "user"
-            : "assistant",
+      ...recentMessages.map(
+        (message) => ({
+          role:
+            message.role ===
+            "visitor"
+              ? "user"
+              : "assistant",
 
-        content: message.content,
-      })),
+          content:
+            message.content,
+        })
+      ),
     ];
 
-    let lastError =
-      "The AI could not generate a reply.";
-
     for (
-      let attempt = 1;
-      attempt <= MAX_ATTEMPTS;
-      attempt += 1
+      const modelConfig of MODELS
     ) {
       try {
         const {
           response,
           data,
-        } = await requestCompletion({
-          accountId,
-          apiToken,
-          messages: cloudflareMessages,
-        });
+        } =
+          await requestCompletion({
+            accountId,
+            apiToken,
+
+            model:
+              modelConfig.id,
+
+            timeoutMs:
+              modelConfig.timeoutMs,
+
+            maxCompletionTokens:
+              modelConfig.maxCompletionTokens,
+
+            messages:
+              cloudflareMessages,
+          });
 
         if (
           !response.ok ||
           data.success === false
         ) {
           const providerError =
-            data.errors?.[0]?.message ??
+            data.errors?.[0]
+              ?.message ??
             `HTTP ${response.status}`;
 
           console.warn(
-            `Workers AI attempt ${attempt} failed:`,
+            `${modelConfig.name} failed:`,
             providerError
           );
-
-          lastError = providerError;
 
           continue;
         }
 
         const choice =
-          data.result?.choices?.[0];
+          data.result
+            ?.choices?.[0];
 
         const content =
-          choice?.message?.content?.trim() ?? "";
+          choice?.message?.content
+            ?.trim() ?? "";
 
         const finishReason =
-          choice?.finish_reason ?? null;
+          choice?.finish_reason ??
+          null;
 
         const neurons =
-          data.result?.usage?.neurons;
+          data.result?.usage
+            ?.neurons;
 
         const promptLeak =
           Boolean(content) &&
-          looksLikePromptLeak(content);
+          looksLikePromptLeak(
+            content
+          );
 
         console.log(
-          `Workers AI attempt ${attempt}:`,
+          "Workers AI response:",
           {
-            model: MODEL,
-            status: response.status,
+            provider:
+              modelConfig.name,
+
+            model:
+              modelConfig.id,
+
+            status:
+              response.status,
+
             finishReason,
+
             hasContent:
               Boolean(content),
+
             promptLeak,
+
             neurons,
           }
         );
 
         if (promptLeak) {
           console.warn(
-            `Workers AI attempt ${attempt}: rejected possible prompt leak`
+            `${modelConfig.name}: rejected possible prompt leak`
           );
-
-          lastError =
-            "The AI returned an unusable response.";
-
-          continue;
-        }
-
-        if (
-          finishReason === "length" &&
-          !content
-        ) {
-          console.warn(
-            `Workers AI attempt ${attempt}: exhausted completion budget before visible reply`
-          );
-
-          lastError =
-            "The AI ran out of response budget.";
 
           continue;
         }
 
         if (!content) {
-          console.warn(
-            `Workers AI attempt ${attempt}: empty response`
-          );
-
-          lastError =
-            "The AI returned an empty response.";
+          if (
+            finishReason ===
+            "length"
+          ) {
+            console.warn(
+              `${modelConfig.name}: exhausted completion budget before visible reply`
+            );
+          } else {
+            console.warn(
+              `${modelConfig.name}: empty response`
+            );
+          }
 
           continue;
         }
 
         return Response.json({
-          message: content,
+          message:
+            content,
         });
       } catch (error) {
         if (
-          error instanceof Error &&
-          error.name === "AbortError"
+          error instanceof
+            Error &&
+          error.name ===
+            "AbortError"
         ) {
           console.warn(
-            `Workers AI attempt ${attempt}: timed out after ${REQUEST_TIMEOUT_MS}ms`
+            `${modelConfig.name}: timed out after ${modelConfig.timeoutMs}ms`
           );
-
-          lastError =
-            "The reply took too long.";
 
           continue;
         }
 
         console.warn(
-          `Workers AI attempt ${attempt}: request failed`,
+          `${modelConfig.name}: request failed`,
           error
         );
 
-        lastError =
-          "The AI request failed.";
+        continue;
       }
     }
 
+    /*
+     * Both providers failed.
+     *
+     * Don't leak provider details
+     * into the visitor-facing UI.
+     */
     return Response.json(
       {
-        error: lastError,
+        error:
+          "Nobody's answering right now. Try again.",
       },
       {
         status: 502,

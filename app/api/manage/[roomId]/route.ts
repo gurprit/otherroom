@@ -12,6 +12,8 @@ type ConversationRow = {
   started_at: string;
   last_activity_at: string;
   visitor_message_count: number;
+  chaos_level: number;
+  last_decoy_message: string | null;
 };
 
 type ManageRouteProps = {
@@ -40,7 +42,8 @@ export async function GET(
     if (!token) {
       return Response.json(
         {
-          error: "Management token required.",
+          error:
+            "Management token required.",
         },
         {
           status: 401,
@@ -61,6 +64,7 @@ export async function GET(
         WHERE id = ?
         LIMIT 1
       `,
+
       params: [
         roomId,
       ],
@@ -72,7 +76,8 @@ export async function GET(
     if (!room) {
       return Response.json(
         {
-          error: "Room not found.",
+          error:
+            "Room not found.",
         },
         {
           status: 404,
@@ -85,7 +90,8 @@ export async function GET(
     ) {
       return Response.json(
         {
-          error: "Invalid management token.",
+          error:
+            "Invalid management token.",
         },
         {
           status: 403,
@@ -95,21 +101,25 @@ export async function GET(
 
     const {
       rows: conversations,
-    } = await queryD1<ConversationRow>({
-      sql: `
-        SELECT
-          id,
-          started_at,
-          last_activity_at,
-          visitor_message_count
-        FROM conversations
-        WHERE room_id = ?
-        ORDER BY started_at DESC
-      `,
-      params: [
-        roomId,
-      ],
-    });
+    } =
+      await queryD1<ConversationRow>({
+        sql: `
+          SELECT
+            id,
+            started_at,
+            last_activity_at,
+            visitor_message_count,
+            chaos_level,
+            last_decoy_message
+          FROM conversations
+          WHERE room_id = ?
+          ORDER BY started_at DESC
+        `,
+
+        params: [
+          roomId,
+        ],
+      });
 
     const stats =
       conversations.map(
@@ -137,6 +147,12 @@ export async function GET(
             visitorMessageCount:
               conversation.visitor_message_count,
 
+            chaosLevel:
+              conversation.chaos_level,
+
+            lastDecoyMessage:
+              conversation.last_decoy_message,
+
             durationSeconds:
               Math.max(
                 0,
@@ -147,6 +163,7 @@ export async function GET(
                   ) / 1000
                 )
               ),
+
           };
         }
       );
@@ -197,6 +214,19 @@ export async function GET(
           )
         : 0;
 
+    const highestChaosLevel =
+      stats.reduce(
+        (
+          highest,
+          conversation
+        ) =>
+          Math.max(
+            highest,
+            conversation.chaosLevel
+          ),
+        1
+      );
+
     return Response.json({
       room: {
         id:
@@ -212,13 +242,18 @@ export async function GET(
       summary: {
         visitorCount,
         totalMessages,
+
         longestConversationSeconds:
           longestConversation,
+
         averageConversationSeconds:
           averageDuration,
+
+        highestChaosLevel,
       },
 
-      conversations: stats,
+      conversations:
+        stats,
     });
   } catch (error) {
     console.error(
