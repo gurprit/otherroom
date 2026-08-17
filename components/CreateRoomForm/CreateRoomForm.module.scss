@@ -14,368 +14,50 @@
     font-weight: 700;
   }
 
-  h1 {
-    margin: 0 0 12px;
-    font-size: 36px;
-    line-height: 1.1;
-  }
-
-  p {
-    margin: 0;
-    color: #666;
-    line-height: 1.5;
-  }
+  h1 { margin: 0 0 12px; font-size: 36px; line-height: 1.1; }
+  p { margin: 0; color: #666; line-height: 1.5; }
 }
 
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
+.form { display: flex; flex-direction: column; gap: 32px; }
+.field { display: flex; flex-direction: column; gap: 8px; label { font-size: 14px; font-weight: 600; } input, textarea { width: 100%; padding: 14px 16px; border: 1px solid #d8d8d8; border-radius: 12px; background: #fff; color: #111; font: inherit; } textarea { min-height: 140px; resize: vertical; } }
+.usernameField { display: flex; align-items: center; border: 1px solid #d8d8d8; border-radius: 12px; padding-left: 16px; span { color: #777; } input { border: 0; &:focus { outline: 0; } } &:focus-within { outline: 2px solid #111; outline-offset: 1px; } }
+.personalities { margin: 0; padding: 0; border: 0; legend { margin-bottom: 12px; font-size: 14px; font-weight: 600; } }
+.personalityList { display: flex; flex-direction: column; gap: 10px; }
+.personality { display: flex; gap: 12px; padding: 16px; border: 1px solid #d8d8d8; border-radius: 14px; cursor: pointer; transition: border-color 0.15s ease, background-color 0.15s ease; input[type="radio"] { width: 18px; height: 18px; flex: 0 0 18px; margin: 4px 0 0; accent-color: #111; } span { display: flex; flex-direction: column; gap: 4px; } strong { font-size: 15px; } small { color: #666; font-size: 14px; line-height: 1.4; } &:has(input:checked) { border-color: #111; background: #f5f5f5; } }
+.submit { min-height: 52px; padding: 0 20px; border: 0; border-radius: 999px; background: #111; color: #fff; font: inherit; font-weight: 600; cursor: pointer; &:hover { background: #333; } }
+.readyBadge { display: inline-flex; width: fit-content; margin-bottom: 14px; padding: 6px 10px; border-radius: 999px; background: #ededed; color: #555; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.readySections { display: flex; flex-direction: column; gap: 18px; }
+.linkCard { padding: 22px; border: 1px solid #dedede; border-radius: 18px; background: #fff; > p { margin: 10px 0 18px; color: #666; font-size: 14px; line-height: 1.5; } }
+.privateCard { background: #fafafa; }
+.linkCardHeader { display: flex; align-items: center; justify-content: space-between; gap: 16px; > div { display: flex; align-items: center; gap: 10px; } h2 { margin: 0; font-size: 18px; } }
+.step { display: grid; width: 28px; height: 28px; border-radius: 50%; background: #111; color: #fff; font-size: 13px; font-weight: 700; place-items: center; }
+.publicBadge, .privateBadge { padding: 5px 9px; border-radius: 999px; background: #eee; color: #666; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.privateBadge { background: #111; color: #fff; }
+.urlRow { display: flex; gap: 8px; button { flex: 0 0 auto; padding: 0 16px; border: 0; border-radius: 999px; background: #111; color: #fff; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; &:hover { background: #333; } } }
+.url { min-width: 0; flex: 1; padding: 13px 14px; overflow: hidden; border-radius: 12px; background: #f3f3f3; font-size: 13px; line-height: 1.4; text-overflow: ellipsis; white-space: nowrap; }
+.secretUrl { color: #555; }
+.saveNotice { margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: #ededed; color: #555; font-size: 13px; line-height: 1.45; }
+.dashboardButton { display: flex; min-height: 54px; align-items: center; justify-content: center; padding: 0 20px; border-radius: 999px; background: #111; color: #fff; font-weight: 700; text-decoration: none; &:hover { background: #333; } }
+.secondaryButton { min-height: 48px; border: 1px solid #d8d8d8; border-radius: 999px; background: #fff; color: #555; font: inherit; font-weight: 600; cursor: pointer; &:hover { border-color: #aaa; color: #111; } }
+.error { margin: 0; color: #b42318; font-size: 14px; }
+.personalityContent { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 5px; }
+.personalityExample { display: block; width: fit-content; max-width: 100%; margin-top: 6px; padding: 8px 11px; border-radius: 12px 12px 12px 4px; background: #f3f3f3; color: #555; font-size: 13px; font-style: italic; line-height: 1.4; }
+.personality:has(input:checked) .personalityExample { background: #e8e8e8; color: #333; }
+
+:global(html[data-theme="dark"]) {
+  .container { color: var(--text); }
+  .header p, .personality small, .secretUrl, .saveNotice { color: var(--text-muted); }
+  .field input, .field textarea, .usernameField, .personality, .linkCard, .secondaryButton { border-color: var(--border); background: var(--surface); color: var(--text); }
+  .usernameField span { color: var(--text-soft); }
+  .usernameField:focus-within { outline-color: var(--text); }
+  .personality input[type="radio"] { accent-color: var(--text); }
+  .personality:has(input:checked), .readyBadge, .url, .saveNotice, .personalityExample { background: var(--surface-muted); }
+  .personality:has(input:checked) { border-color: var(--text); }
+  .privateCard { background: var(--surface-subtle); }
+  .submit, .step, .privateBadge, .urlRow button, .dashboardButton { background: var(--inverse-bg); color: var(--inverse-text); }
+  .publicBadge { background: var(--surface-muted); color: var(--text-muted); }
+  .personality:has(input:checked) .personalityExample { background: var(--border-soft); color: var(--text); }
+  .secondaryButton:hover { color: var(--text); }
 }
 
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-
-  label {
-    font-size: 14px;
-    font-weight: 600;
-  }
-
-  input,
-  textarea {
-    width: 100%;
-    padding: 14px 16px;
-    border: 1px solid #d8d8d8;
-    border-radius: 12px;
-    background: #fff;
-    color: #111;
-    font: inherit;
-  }
-
-  textarea {
-    min-height: 140px;
-    resize: vertical;
-  }
-}
-
-.usernameField {
-  display: flex;
-  align-items: center;
-  border: 1px solid #d8d8d8;
-  border-radius: 12px;
-  padding-left: 16px;
-
-  span {
-    color: #777;
-  }
-
-  input {
-    border: 0;
-
-    &:focus {
-      outline: 0;
-    }
-  }
-
-  &:focus-within {
-    outline: 2px solid #111;
-    outline-offset: 1px;
-  }
-}
-
-.personalities {
-  margin: 0;
-  padding: 0;
-  border: 0;
-
-  legend {
-    margin-bottom: 12px;
-    font-size: 14px;
-    font-weight: 600;
-  }
-}
-
-.personalityList {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.personality {
-  display: flex;
-  gap: 12px;
-  padding: 16px;
-  border: 1px solid #d8d8d8;
-  border-radius: 14px;
-  cursor: pointer;
-  transition:
-    border-color 0.15s ease,
-    background-color 0.15s ease;
-
-  input[type="radio"] {
-    width: 18px;
-    height: 18px;
-    flex: 0 0 18px;
-    margin: 4px 0 0;
-    accent-color: #111;
-  }
-
-  span {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  strong {
-    font-size: 15px;
-  }
-
-  small {
-    color: #666;
-    font-size: 14px;
-    line-height: 1.4;
-  }
-
-  &:has(input:checked) {
-    border-color: #111;
-    background: #f5f5f5;
-  }
-}
-
-.submit {
-  min-height: 52px;
-  padding: 0 20px;
-  border: 0;
-  border-radius: 999px;
-  background: #111;
-  color: #fff;
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-
-  &:hover {
-    background: #333;
-  }
-}
-
-.readyBadge {
-  display: inline-flex;
-  width: fit-content;
-  margin-bottom: 14px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: #ededed;
-  color: #555;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.readySections {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.linkCard {
-  padding: 22px;
-  border: 1px solid #dedede;
-  border-radius: 18px;
-  background: #fff;
-
-  > p {
-    margin: 10px 0 18px;
-    color: #666;
-    font-size: 14px;
-    line-height: 1.5;
-  }
-}
-
-.privateCard {
-  background: #fafafa;
-}
-
-.linkCardHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-
-  > div {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  h2 {
-    margin: 0;
-    font-size: 18px;
-  }
-}
-
-.step {
-  display: grid;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: #111;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 700;
-  place-items: center;
-}
-
-.publicBadge,
-.privateBadge {
-  padding: 5px 9px;
-  border-radius: 999px;
-  background: #eee;
-  color: #666;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.privateBadge {
-  background: #111;
-  color: #fff;
-}
-
-.urlRow {
-  display: flex;
-  gap: 8px;
-
-  button {
-    flex: 0 0 auto;
-    padding: 0 16px;
-    border: 0;
-    border-radius: 999px;
-    background: #111;
-    color: #fff;
-    font: inherit;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-
-    &:hover {
-      background: #333;
-    }
-  }
-}
-
-.url {
-  min-width: 0;
-  flex: 1;
-  padding: 13px 14px;
-  overflow: hidden;
-  border-radius: 12px;
-  background: #f3f3f3;
-  font-size: 13px;
-  line-height: 1.4;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.secretUrl {
-  color: #555;
-}
-
-.saveNotice {
-  margin-top: 14px;
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: #ededed;
-  color: #555;
-  font-size: 13px;
-  line-height: 1.45;
-}
-
-.dashboardButton {
-  display: flex;
-  min-height: 54px;
-  align-items: center;
-  justify-content: center;
-  padding: 0 20px;
-  border-radius: 999px;
-  background: #111;
-  color: #fff;
-  font-weight: 700;
-  text-decoration: none;
-
-  &:hover {
-    background: #333;
-  }
-}
-
-.secondaryButton {
-  min-height: 48px;
-  border: 1px solid #d8d8d8;
-  border-radius: 999px;
-  background: #fff;
-  color: #555;
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-
-  &:hover {
-    border-color: #aaa;
-    color: #111;
-  }
-}
-
-.error {
-  margin: 0;
-  color: #b42318;
-  font-size: 14px;
-}
-
-@media (max-width: 520px) {
-  .linkCardHeader {
-    align-items: flex-start;
-  }
-
-  .urlRow {
-    flex-direction: column;
-
-    button {
-      min-height: 44px;
-    }
-  }
-
-  .url {
-    white-space: normal;
-    overflow-wrap: anywhere;
-  }
-}
-
-.personalityContent {
-  display: flex;
-  min-width: 0;
-  flex: 1;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.personalityExample {
-  display: block;
-  width: fit-content;
-  max-width: 100%;
-  margin-top: 6px;
-  padding: 8px 11px;
-  border-radius: 12px 12px 12px 4px;
-  background: #f3f3f3;
-  color: #555;
-  font-size: 13px;
-  font-style: italic;
-  line-height: 1.4;
-}
-
-.personality:has(input:checked) {
-  .personalityExample {
-    background: #e8e8e8;
-    color: #333;
-  }
-}
+@media (max-width: 520px) { .linkCardHeader { align-items: flex-start; } .urlRow { flex-direction: column; button { min-height: 44px; } } .url { white-space: normal; overflow-wrap: anywhere; } }
