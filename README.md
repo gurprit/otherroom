@@ -1,36 +1,132 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# OtherRoom 🚪
 
-## Getting Started
+> Give unwanted DMs somewhere else to go.
 
-First, run the development server:
+**OtherRoom** is a lightweight anonymous chat app that lets you create a shareable room containing an AI character. Instead of continuing an unwanted or awkward conversation in your own DMs, you can send the visitor to an OtherRoom and let the character take it from there.
+
+🌐 **Live:** [otherroom.chat](https://otherroom.chat/)
+
+## How it works
+
+1. Create an OtherRoom.
+2. Give the character a name and choose a personality, or write your own.
+3. Share the generated room link.
+4. The visitor chats anonymously with the AI character.
+5. Return to the private management page to see conversations and room statistics.
+
+The character is deliberately separate from the room creator. OtherRoom is not intended to impersonate the person who shared the link.
+
+## Features
+
+- 🎭 Preset AI personalities
+- ✍️ Custom character personalities
+- 🔗 Shareable room links
+- 💬 Anonymous visitor chat
+- 🧠 AI-generated character replies
+- 💾 Persistent rooms and conversations
+- 📊 Private room management and conversation stats
+- 📱 Mobile-first interface
+- ☁️ Serverless deployment on Cloudflare
+
+## Tech stack
+
+| | Technology |
+| --- | --- |
+| Framework | Next.js 16 |
+| UI | React 19 |
+| Language | TypeScript |
+| Styling | SCSS Modules |
+| Hosting | Cloudflare Workers |
+| Next.js adapter | OpenNext for Cloudflare |
+| Database | Cloudflare D1 |
+| AI | Cloudflare Workers AI |
+| Deployment | Wrangler |
+
+## Local development
+
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Configure environment variables
+
+Create a local `.env.local` file for any environment-specific configuration required by the app.
+
+Environment files are ignored by Git and **secrets should never be committed to the repository**.
+
+### 3. Start the development server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Useful commands
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# Development
+npm run dev
 
-## Learn More
+# Lint
+npm run lint
 
-To learn more about Next.js, take a look at the following resources:
+# Standard Next.js production build
+npm run build
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Cloudflare/OpenNext build
+npm run cf:build
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deployment
 
-## Deploy on Vercel
+OtherRoom is deployed to Cloudflare Workers using OpenNext.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The production build command is:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run cf:build
+```
+
+The deployment command is:
+
+```bash
+npx wrangler deploy --keep-vars
+```
+
+Cloudflare configuration lives in `wrangler.jsonc`, including the D1 database binding used by the application.
+
+Production deployments are connected to the `main` branch of this repository.
+
+## Project structure
+
+```text
+app/
+  api/                 API routes
+  manage/[roomId]/     Private room management
+  room/[roomId]/       Visitor chat experience
+components/            React UI components
+lib/                   Database, AI and application helpers
+types/                 Shared TypeScript types
+```
+
+## Status
+
+🟢 **MVP deployed**
+
+OtherRoom is currently an early-stage project. The core create → share → chat → review flow is live, but features, character behaviour, safety controls and the interface are still being refined.
+
+## Roadmap
+
+- Improve character realism and personality consistency
+- Expand safety and abuse protections
+- Refine room analytics and achievements
+- Improve sharing and onboarding
+- Continue mobile UX polish
+- Production testing across browsers and devices
+
+---
+
+Built as an experiment in giving awkward internet conversations another room to wander into. 🚪
