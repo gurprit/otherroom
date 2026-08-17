@@ -360,10 +360,6 @@ export default function RoomChat({
               </span>
             </div>
           </div>
-
-          <span className={styles.aiLabel}>
-            AI character
-          </span>
         </header>
 
         <div
@@ -389,7 +385,6 @@ export default function RoomChat({
               </span>
 
               <p>
-                This is an AI character.
                 Send a message to start chatting.
               </p>
             </div>
@@ -452,10 +447,6 @@ export default function RoomChat({
             ↑
           </button>
         </form>
-
-        <footer className={styles.footer}>
-          OtherRoom · AI character
-        </footer>
       </section>
     </main>
   );
